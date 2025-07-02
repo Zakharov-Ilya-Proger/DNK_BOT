@@ -7,7 +7,9 @@ from aiogram.filters import Command
 from aiogram.types import Message, KeyboardButton
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
+from app.ai.ai_agent_setup import logger
 from app.ai.ai_resposes import generate_response
+from app.db.db import clear_history
 from app.funcs.answers import answers_dict
 from app.funcs.build_inline import generate_reply_keyboard
 from settings import settings
@@ -15,7 +17,8 @@ from settings import settings
 bot = Bot(
     token=settings.TG_BOT_KEY,
     default=DefaultBotProperties(
-        parse_mode=ParseMode.HTML
+        parse_mode=ParseMode.MARKDOWN,
+        link_preview_is_disabled=True,
     ),
 )
 dp =  Dispatcher()
@@ -25,8 +28,8 @@ async def start(message: Message):
     builder = await generate_reply_keyboard()
     await message.answer(
         '''
-        <b>Здравствуйте!</b>
-    Я бот, который здесь для того, чтобы помочь вам показать ваш фильм на нашем фесте
+        *Здравствуйте!*
+    Я бот, готовый ответить на ваши вопросы по регистрации на сайте, заполнению лицензионного соглашения, отбору фильмов и другим моментам.
         ''',
         reply_markup=builder
     )
@@ -47,6 +50,7 @@ async def helper(message: Message):
 
 @dp.message(lambda message: ' '.join(message.text.split(' ')[1:]) in answers_dict.keys())
 async def answer(message: Message):
+    logger.info('Z')
     key = ' '.join(message.text.split(' ')[1:])
     index = list(answers_dict.keys()).index(key)
     builder = await generate_reply_keyboard(index)
@@ -56,7 +60,13 @@ async def answer(message: Message):
     )
 
 
-
+@dp.message(lambda message: message.text == 'Спасибо, ты мне очень помог)')
+async def answer(message: Message):
+    await message.answer(
+        'Всегда пожалуйста, рад был помочь!',
+        reply_markup=ReplyKeyboardBuilder().add(KeyboardButton(text='/start')).as_markup(resize_keyboard=True)
+    )
+    await clear_history(message.from_user.id)
 
 
 @dp.message()
@@ -66,10 +76,3 @@ async def answer_nontypical(message: Message):
     keyboard = KeyboardButton(text='Спасибо, ты мне очень помог)')
     builder.add(keyboard)
     await message.answer(user_answer, reply_markup=builder.as_markup(resize_keyboard=True))
-
-async def main():
-    await dp.start_polling(bot)
-
-
-if __name__ == '__main__':
-    asyncio.run(main())

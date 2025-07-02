@@ -1,5 +1,5 @@
-from aiogram.utils.keyboard import KeyboardBuilder, ReplyKeyboardBuilder
-from aiogram.types import InlineKeyboardButton, KeyboardButton
+from aiogram.utils.keyboard import ReplyKeyboardBuilder
+from aiogram.types import KeyboardButton
 
 buttons_list = (
     KeyboardButton(
