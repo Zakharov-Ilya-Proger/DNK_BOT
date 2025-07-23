@@ -1,5 +1,3 @@
-import asyncio
-
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
@@ -7,11 +5,9 @@ from aiogram.filters import Command
 from aiogram.types import Message, KeyboardButton
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
-from app.ai.ai_agent_setup import logger
-from app.ai.ai_resposes import generate_response
+from app.ai import logger, generate_response
 from app.db.db import clear_history
-from app.funcs.answers import answers_dict
-from app.funcs.build_inline import generate_reply_keyboard
+from app.funcs import answers_dict, generate_reply_keyboard, photo_list
 from settings import settings
 
 bot = Bot(
@@ -28,8 +24,7 @@ async def start(message: Message):
     builder = await generate_reply_keyboard()
     await message.answer(
         '''
-        *Здравствуйте!*
-    Я бот, готовый ответить на ваши вопросы по регистрации на сайте, заполнению лицензионного соглашения, отбору фильмов и другим моментам.
+        *Привет!* Я бот ДНК, готовый ответить на ваши вопросы по участию в проекте. Ты можешь не только посмотреть уже подготовленные разделы, но и просто задавать мне вопросы текстом в чате
         ''',
         reply_markup=builder
     )
@@ -48,14 +43,20 @@ async def helper(message: Message):
     )
 
 
-@dp.message(lambda message: ' '.join(message.text.split(' ')[1:]) in answers_dict.keys())
+@dp.message(lambda message: message.text in answers_dict.keys())
 async def answer(message: Message):
     logger.info('Z')
-    key = ' '.join(message.text.split(' ')[1:])
-    index = list(answers_dict.keys()).index(key)
+    index = list(answers_dict.keys()).index(message.text)
     builder = await generate_reply_keyboard(index)
+    if message.text == list(answers_dict.keys())[-1]:
+        for index, photo in enumerate(photo_list):
+            await message.answer_photo(
+                photo=photo,
+                caption=answers_dict[message.text][index],
+            )
+        return
     await message.answer(
-        answers_dict[key],
+        answers_dict[message.text],
         reply_markup=builder
     )
 
