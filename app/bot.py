@@ -2,12 +2,12 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.filters import Command
-from aiogram.types import Message, KeyboardButton
-from aiogram.utils.keyboard import ReplyKeyboardBuilder
+from aiogram.types import Message, KeyboardButton, InlineKeyboardButton, CallbackQuery
+from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 
 from app.ai import logger, generate_response
 from app.db.db import clear_history
-from app.funcs import answers_dict, generate_reply_keyboard, photo_list
+from app.funcs import answers_dict, generate_reply_keyboard, photo_list, generate_inline_key
 from settings import settings
 
 bot = Bot(
@@ -49,16 +49,71 @@ async def answer(message: Message):
     logger.info('Z')
     index = list(answers_dict.keys()).index(message.text)
     builder = await generate_reply_keyboard(index)
-    if message.text == list(answers_dict.keys())[-1]:
-        for index, photo in enumerate(photo_list):
-            await message.answer_photo(
-                photo=photo,
-                caption=answers_dict[message.text][index],
+    if message.text == 'Фильмы':
+        await message.answer(
+            text=answers_dict[message.text][0],
+            reply_markup=await generate_inline_key(
+                index=0,
+                items=answers_dict[message.text],
+                call_pref='film'
             )
+        )
+        return
+    if message.text == list(answers_dict.keys())[-1]:
+        await message.answer(
+            text=answers_dict[message.text][0].text,
+            reply_markup=await generate_inline_key(
+                index=0,
+                items= answers_dict[message.text],
+                call_pref='info'
+            )
+        )
         return
     await message.answer(
-        answers_dict[message.text],
+        answers_dict[
+            message.text
+        ],
         reply_markup=builder
+    )
+
+
+@dp.callback_query(lambda callback: callback.data.split("_")[0] == 'info')
+async def info(callback: CallbackQuery):
+    index = int(callback.data.split('_')[-1])
+    await callback.message.delete()
+    data = answers_dict['Инструкции по использованию сайта'][index]
+
+    if data.photo_index is None:
+        await callback.message.answer(
+            text=data.text,
+            reply_markup=await generate_inline_key(
+                index=index,
+                items=answers_dict['Инструкции по использованию сайта'],
+                call_pref='info'
+            )
+        )
+    else:
+        await callback.message.answer_photo(
+            caption=data.text,
+            photo=photo_list[data.photo_index],
+            reply_markup=await generate_inline_key(
+                index=index,
+                items=answers_dict['Инструкции по использованию сайта'],
+                call_pref='info'
+            )
+        )
+
+
+@dp.callback_query(lambda callback: callback.data.split("_")[0] == 'film')
+async def film(callback: CallbackQuery):
+    index = int(callback.data.split('_')[-1])
+    await callback.message.edit_text(
+        text=answers_dict['Фильмы'][index],
+        reply_markup=await generate_inline_key(
+            index=index,
+            items=answers_dict['Фильмы'],
+            call_pref='film'
+        )
     )
 
 
