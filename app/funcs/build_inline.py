@@ -1,6 +1,8 @@
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 from aiogram.types import KeyboardButton
 
+from app.funcs.answers import answers_dict
+
 buttons_list_old = (
     KeyboardButton(
         text='1. Вступите в чат',
@@ -45,52 +47,13 @@ buttons_list_old = (
 )
 
 
-buttons_list_new = (
+buttons_list_new = list((
     KeyboardButton(
-        text='Вступите в чат',
-        url='https://t.me/dnk_csff'
-    ),
-    KeyboardButton(
-        text='О проекте',
-        callback_data='step_0'
-    ),
-    KeyboardButton(
-        text='Инструкции',
-        callback_data='step_1'
-    ),
-    KeyboardButton(
-        text='Фильмы',
-        callback_data='step_2'
-    ),
-    KeyboardButton(
-        text='Дизайн и анонсирование',
-        callback_data='step_3'
-    ),
-    KeyboardButton(
-        text='Регистрация на показы',
-        callback_data='step_4'
-    ),
-    KeyboardButton(
-        text='Проведение показа',
-        callback_data='step_5'
-    ),
-    KeyboardButton(
-        text='Отчет по показу',
-        callback_data='step_6'
-    ),
-    KeyboardButton(
-        text='Общий отчет по итогам всех показов',
-        callback_data='step_7'
-    ),
-    KeyboardButton(
-        text='Мини-гранты для организаторов',
-        callback_data='step_8'
-    ),
-    KeyboardButton(
-        text='Инструкции по использованию сайта',
-        callback_data='step_9'
+        text=text,
+        callback_data=f'step_{index}'
     )
-)
+    for index, text in enumerate(answers_dict)
+))
 
 
 async def generate_reply_keyboard(exclude_index: int = None):

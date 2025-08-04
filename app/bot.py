@@ -7,7 +7,8 @@ from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 
 from app.ai import logger, generate_response
 from app.db.db import clear_history
-from app.funcs import answers_dict, generate_reply_keyboard, photo_list, generate_inline_key
+from app.funcs import generate_reply_keyboard, photo_list, generate_inline_key
+from app.funcs.answers import answers_dict
 from settings import settings
 
 bot = Bot(
@@ -59,7 +60,7 @@ async def answer(message: Message):
             )
         )
         return
-    if message.text == list(answers_dict.keys())[-1]:
+    if message.text == 'Инструкции по использованию сайта':
         await message.answer(
             text=answers_dict[message.text][0].text,
             reply_markup=await generate_inline_key(
@@ -69,6 +70,15 @@ async def answer(message: Message):
             )
         )
         return
+
+    if message.text == 'У меня проблема':
+        await message.answer(
+            text=answers_dict[message.text],
+            reply_markup=builder,
+            parse_mode=None
+        )
+        return
+
     await message.answer(
         answers_dict[
             message.text
